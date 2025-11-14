@@ -36,9 +36,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     });
   };
 
-  const handleCloseContextMenu = () => {
-    setContextMenu(null);
-  };
 
   const handleEditCategory = () => {
     if (contextMenu) {
