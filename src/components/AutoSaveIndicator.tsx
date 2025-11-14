@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Save } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface AutoSaveIndicatorProps {
   data: any;

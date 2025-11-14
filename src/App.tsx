@@ -142,7 +142,7 @@ const App: React.FC = () => {
         onSave={handleSavePrompt}
         categories={data.categories}
         editingPrompt={editingPrompt}
-        selectedCategoryId={selectedCategoryId}
+        selectedCategoryId={selectedCategoryId || undefined}
       />
 
       <CategoryModal
