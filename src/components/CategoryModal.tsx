@@ -1,19 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { Category } from '../types';
 
 interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (name: string, icon: string) => void;
+  editingCategory?: Category | null;
 }
 
 const CategoryModal: React.FC<CategoryModalProps> = ({
   isOpen,
   onClose,
-  onSave
+  onSave,
+  editingCategory
 }) => {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('📁');
+
+  // 当编辑分类时，填充表单
+  useEffect(() => {
+    if (editingCategory) {
+      setName(editingCategory.name);
+      setIcon(editingCategory.icon);
+    } else {
+      setName('');
+      setIcon('📁');
+    }
+  }, [editingCategory, isOpen]);
 
   const commonIcons = [
     '📁', '📝', '💻', '🎨', '💼', '📚', '🔧', '💡',
@@ -36,7 +50,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">添加分类</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            {editingCategory ? '编辑分类' : '添加分类'}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
@@ -98,7 +114,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               disabled={!name.trim()}
             >
-              添加分类
+              {editingCategory ? '保存修改' : '添加分类'}
             </button>
           </div>
         </form>

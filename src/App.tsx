@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -85,22 +86,65 @@ const App: React.FC = () => {
   };
 
   const handleAddCategory = () => {
+    setEditingCategory(null);
     setIsCategoryModalOpen(true);
   };
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    const category = data.categories.find(c => c.id === categoryId);
+    if (!category) return;
+
+    const promptCount = data.prompts.filter(p => p.categoryId === categoryId).length;
+    const confirmMessage = promptCount > 0 
+      ? `确定要删除分类 "${category.name}" 吗？\n\n注意：该分类下有 ${promptCount} 个提示词，删除分类后这些提示词也将被删除。`
+      : `确定要删除分类 "${category.name}" 吗？`;
+
+    if (window.confirm(confirmMessage)) {
+      setData(prev => ({
+        categories: prev.categories.filter(c => c.id !== categoryId),
+        prompts: prev.prompts.filter(p => p.categoryId !== categoryId)
+      }));
+      
+      // 如果删除的是当前选中的分类，切换到第一个分类
+      if (selectedCategoryId === categoryId) {
+        const remainingCategories = data.categories.filter(c => c.id !== categoryId);
+        setSelectedCategoryId(remainingCategories[0]?.id || null);
+      }
+    }
+  };
+
   const handleSaveCategory = (name: string, icon: string) => {
-    const newCategory: Category = {
-      id: Date.now().toString(),
-      name,
-      icon
-    };
-    setData(prev => ({
-      ...prev,
-      categories: [...prev.categories, newCategory]
-    }));
+    if (editingCategory) {
+      // 编辑现有分类
+      setData(prev => ({
+        ...prev,
+        categories: prev.categories.map(c => 
+          c.id === editingCategory.id 
+            ? { ...c, name, icon }
+            : c
+        )
+      }));
+    } else {
+      // 添加新分类
+      const newCategory: Category = {
+        id: Date.now().toString(),
+        name,
+        icon
+      };
+      setData(prev => ({
+        ...prev,
+        categories: [...prev.categories, newCategory]
+      }));
+      // 自动选择新添加的分类
+      setSelectedCategoryId(newCategory.id);
+    }
     setIsCategoryModalOpen(false);
-    // 自动选择新添加的分类
-    setSelectedCategoryId(newCategory.id);
+    setEditingCategory(null);
   };
 
   const handleOpenSettings = () => {
@@ -122,6 +166,8 @@ const App: React.FC = () => {
         selectedCategoryId={selectedCategoryId}
         onCategorySelect={handleCategorySelect}
         onAddCategory={handleAddCategory}
+        onEditCategory={handleEditCategory}
+        onDeleteCategory={handleDeleteCategory}
         onOpenSettings={handleOpenSettings}
       />
       
@@ -147,8 +193,12 @@ const App: React.FC = () => {
 
       <CategoryModal
         isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
+        onClose={() => {
+          setIsCategoryModalOpen(false);
+          setEditingCategory(null);
+        }}
         onSave={handleSaveCategory}
+        editingCategory={editingCategory}
       />
 
       <SettingsPanel
